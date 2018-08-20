@@ -2,6 +2,7 @@ _RIGHT_TS_NAME = None
 _USER_ID_NAME = None
 _TARGET_NAME = None
 
+
 def set_col_names(right_ts=None, user_id=None, target=None):
     global _RIGHT_TS_NAME
     global _USER_ID_NAME
