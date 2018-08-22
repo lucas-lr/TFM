@@ -1,20 +1,21 @@
 import pandas as pd
-from settings import get_right_ts_name, get_target_name, get_user_id_name
+from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name
 
 
-def presequence_padding(df0, val, right_ts=None, user_id=None,
-                        target=None, p2p=None, fillna_cols=[],
-                        fillna_val=0., keep_first_cols=[]):
+def presequence_padding(df0, val, right_ts=None, user_id=None, target=None,
+                        p2p=None, fillna_cols=[], fillna_val=0.,
+                        keep_first_cols=[]):
     '''
-    Transforms data such that each sequence has a length equal to
-    a multiple of a choosen value.
+    Transforms data such that each sequence has a length equal to a multiple of
+    a choosen value.
     Parameters:
-     > p2p: periods to predict. Example: predict the sum of the
-       expense of the next 4 weeks.
+     > p2p: periods to predict. Example: predict the sum of the expense of the
+       next 4 weeks.
      > fillna_cols: fills null values with fillna_val.
-     > keep_first_cols: fills null values with the first value for
-       each user in case there is at least one not null value.
+     > keep_first_cols: fills null values with the first value for each user in
+       case there is at least one not null value.
     '''
+
 
     right_ts = get_right_ts_name(right_ts=right_ts)
     target = get_target_name(target=target)
@@ -42,10 +43,10 @@ def presequence_padding(df0, val, right_ts=None, user_id=None,
         uids = user_len.loc[user_len['len0'] == l].index
         
         if len(uids) > 0:
-            uid = uids[1]
+            uid = uids[0]
         else:
             l = temp[user_id].value_counts().max()
-            uid = user_len.loc[user_len['len0'] == l].index[1]
+            uid = user_len.loc[user_len['len0'] == l].index[0]
 
         ts = temp.loc[temp[user_id] == uid, right_ts].copy()
         
@@ -54,8 +55,7 @@ def presequence_padding(df0, val, right_ts=None, user_id=None,
             user_ts[user_id] = uid
             USER_TS.append(user_ts)
     print('> Merging "indexes" with session data...')
-    df = pd.concat(USER_TS).merge(df, on=[right_ts, user_id],
-                                    how='left')
+    df = pd.concat(USER_TS).merge(df, on=[right_ts, user_id], how='left')
     del USER_TS
     print()
     

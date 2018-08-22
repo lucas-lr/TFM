@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from sklearn.externals import joblib
-from settings import get_right_ts_name, get_target_name, get_user_id_name
+from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name
 
 
 def load_data(
