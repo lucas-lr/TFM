@@ -1,7 +1,56 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from TFM.settings import get_right_ts_name
+from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name
+
+
+def get_decimal_month(dt_series):
+    aux = dt_series.dt.day/dt_series.dt.daysinmonth
+    return dt_series.dt.month + aux - 1
+
+
+def add_prior_target(df, p2p, target=None, user_id=None):
+    '''
+    Adds the prior_target column to the input dataframe. Parameters:
+     > p2p: periods to predict. Examples: predict the sum of the expense of
+       each user in the next [4] weeks.
+    '''
+    
+    target = get_target_name(target=target)
+    user_id = get_user_id_name(user_id=user_id)
+    
+    df['prior_target'] = df.groupby(user_id)[target] \
+        .transform(pd.Series.shift, p2p).fillna(0.)
+
+
+def fillna_cols(df0, user_id=None, fillna_val={}, bfill_cols=[], ffill_cols=[],
+                verbose=True):
+    '''
+    Parameters:
+     > fillna_cols: fills null values with fillna_val.
+     > keep_first_cols: fills null values with the first value for each user in
+       case there is at least one not null value.
+    '''
+    
+    user_id = get_user_id_name(user_id=user_id)
+    
+    df = df0.copy()
+    
+    for col, val in fillna_val.items():
+        if col in df.columns:
+            df[col].fillna(value=val, inplace=True)
+
+    for col in bfill_cols:
+        if col in df.columns:
+            df[col] = df.groupby(user_id, sort=False)[col] \
+                .apply(lambda x: x.bfill())
+    
+    for col in ffill_cols:
+        if col in df.columns:
+            df[col] = df.groupby(user_id, sort=False)[col] \
+                .apply(lambda x: x.ffill())
+    
+    return df
 
 
 def clip_continuous_f(se0, q2cl=0, q2cu=1, neg_val=True, return_se1=False,
