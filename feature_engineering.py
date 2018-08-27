@@ -23,13 +23,14 @@ def add_prior_target(df, p2p, target=None, user_id=None):
         .transform(pd.Series.shift, p2p).fillna(0.)
 
 
-def fillna_cols(df0, user_id=None, fillna_val={}, bfill_cols=[], ffill_cols=[],
+def fillna_cols(df0, user_id=None, fillna_val={}, ffill_cols=[], bfill_cols=[],
                 verbose=True):
     '''
+    Fills null values in a dataframe by using the chosen method.
     Parameters:
-     > fillna_cols: fills null values with fillna_val.
-     > keep_first_cols: fills null values with the first value for each user in
-       case there is at least one not null value.
+     > fillna_cols: dict with col name (key) and fillna value (value).
+     > ffill_cols: fills null values using the forward method per user.
+     > bfill_cols: fills null values using the backward method per user.
     '''
     
     user_id = get_user_id_name(user_id=user_id)
