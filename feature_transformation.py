@@ -3,11 +3,16 @@ from TFM.feature_engineering import clip_continuous_f
 
 
 def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
-                       drop_cols=True, verbose=True):
+    strategy='median', drop_cols=True, verbose=True):
     '''
-    Returns the dataframe with the transformed features and M.
+    Returns:
+     > dataframe with the transformed features
+     > continuous features list
+     > lstm features list
+     > continuous features list
+     > M
     Applies 2 transformers to the continuous and LSTM features:
-     > Imputer(strategy='median')
+     > Imputer()
      > MinMaxScaler()
     Clips LSTM features before fitting the MinMaxScaler().
     Applies a label encoder to the categorical columns.
@@ -17,7 +22,8 @@ def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
        upper clip values (values).
      > cat_cols: dict of categorical columns (keys) and
        the number of features to be returned.
-     > drop_na: if True, the original columns are excluded.
+     > strategy: used in the Inputer() transformer.
+     > drop_cols: if True, the original columns are excluded.
     '''
     
     df = df0.copy()
@@ -27,7 +33,7 @@ def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
         print('> Preprocessing continuous features...')
     con_features = []
     for f in con_cols:
-        t1 = Imputer(strategy='median')
+        t1 = Imputer(strategy=strategy)
         t2 = MinMaxScaler()
         df['con__' + f] = t1.fit_transform(df[[f]])
         df['con__' + f] = t2.fit_transform(df[['con__' + f]])
@@ -40,7 +46,7 @@ def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
         print('> Preprocessing LSTM continuous features...')
     lstm_features = []
     for f in lstm_cols.keys():
-        t1 = Imputer(strategy='median')
+        t1 = Imputer(strategy=strategy)
         t2 = MinMaxScaler()
         df['con__' + f] = t1.fit_transform(df[[f]])
         t2.fit(df[['con__' + f]].clip(lstm_cols[f][0],
