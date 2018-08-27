@@ -40,16 +40,16 @@ def fillna_cols(df0, user_id=None, fillna_val={}, bfill_cols=[], ffill_cols=[],
         if col in df.columns:
             df[col].fillna(value=val, inplace=True)
 
-    for col in bfill_cols:
-        if col in df.columns:
-            df[col] = df.groupby(user_id, sort=False)[col] \
-                .apply(lambda x: x.bfill())
-    
     for col in ffill_cols:
         if col in df.columns:
             df[col] = df.groupby(user_id, sort=False)[col] \
                 .apply(lambda x: x.ffill())
-    
+
+    for col in bfill_cols:
+        if col in df.columns:
+            df[col] = df.groupby(user_id, sort=False)[col] \
+                .apply(lambda x: x.bfill())
+
     return df
 
 
