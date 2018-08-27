@@ -9,7 +9,7 @@ def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
      > dataframe with the transformed features
      > continuous features list
      > lstm features list
-     > continuous features list
+     > categorical features list
      > M
     Applies 2 transformers to the continuous and LSTM features:
      > Imputer()
