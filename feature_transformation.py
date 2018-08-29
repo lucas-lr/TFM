@@ -16,7 +16,7 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
     Returns:
      > dataframe with transformed features
      > feat_dict with lists of continuous, LSTM and categorical features and M
-    Optionally, it applies 2 transformers to the continuous and LSTM features:
+    If necessary, it applies 2 transformers to the continuous and LSTM features:
      > Imputer()
      > MinMaxScaler()
     Clips LSTM features before fitting the MinMaxScaler().
@@ -33,7 +33,7 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
     
     df = df0.copy()
 
-    # Preprocessing numerical features
+    # User profile continuous features
     if verbose:
         print('> Preprocessing continuous features...')
     con_features = []
@@ -43,13 +43,14 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
             df['con__' + f] = t1.fit_transform(df[[f]])
         else:
             df['con__' + f] = df[f]
-        if not is_binary(df[f]):
+        if not is_binary(df['con__' + f]):
             t2 = MinMaxScaler()
             df['con__' + f] = t2.fit_transform(df[['con__' + f]])
         con_features.append('con__' + f)
         if verbose:
             print('  > {}'.format(f))
 
+    # LSTM / sequence continuous features
     if verbose:
         print()
         print('> Preprocessing LSTM continuous features...')
@@ -57,16 +58,19 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
 
     clip = isinstance(lstm_cols, dict)
     if clip:
-        cols = lstm_cols.keys()
+        lstm_col_list = list(lstm_cols.keys())
     else:
-        cols = lstm_cols
-    for f in cols:
+        lstm_col_list = lstm_cols
+
+    for f in lstm_col_list:
+
         if has_nulls(df[f]):
             t1 = Imputer(strategy=strategy)
             df['con__' + f] = t1.fit_transform(df[[f]])
         else:
             df['con__' + f] = df[f]
-        if is_binary(df[f]):
+
+        if not is_binary(df['con__' + f]):
             if clip:
                 s = df[['con__' + f]].clip(lstm_cols[f][0],
                                            lstm_cols[f][1])
@@ -79,7 +83,7 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
         if verbose:
             print('  > {}'.format(f))
 
-    # Preprocessing categorical features
+    # User profile categorical features
     if verbose:
         print()
         print('> Preprocessing categorical features...')
@@ -94,9 +98,9 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
         M.append((m, cat_cols[f]))
         if verbose:
             print('  > {}'.format(f))
-    
+
     if drop_cols:
-        df.drop(columns=con_cols + list(lstm_cols.keys()) + list(cat_cols.keys()),
+        df.drop(columns=con_cols + lstm_col_list + list(cat_cols.keys()),
                 inplace=True)
     
     feat_dict = {
