@@ -7,10 +7,7 @@ def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
     '''
     Returns:
      > dataframe with the transformed features
-     > continuous features list
-     > lstm features list
-     > categorical features list
-     > M
+     > feat_dict with lists of continuous, LSTM and categorical features and M
     Applies 2 transformers to the continuous and LSTM features:
      > Imputer()
      > MinMaxScaler()
@@ -75,5 +72,12 @@ def transform_features(df0, con_cols=[], lstm_cols={}, cat_cols={},
     if drop_cols:
         df.drop(columns=con_cols + list(lstm_cols.keys()) + list(cat_cols.keys()),
                 inplace=True)
-        
-    return df, con_features, lstm_features, cat_features, M
+    
+    feat_dict = {
+        'con_feats': con_features,
+        'lstm_feats': lstm_features,
+        'cat_feats': cat_features,
+        'M': M
+    }
+
+    return df, feat_dict

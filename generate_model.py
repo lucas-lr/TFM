@@ -4,8 +4,12 @@ from keras.optimizers import RMSprop
 from keras.regularizers import L1L2
 
 
-def generate_model(con_feats, lstm_feats, M):
+def generate_model(feat_dict):
     
+    con_feats = feat_dict['con_feats']
+    lstm_feats = feat_dict['lstm_feats']
+    M = feat_dict['M']
+
     # Initialize input    
     INPUT = [[], [], []]
 

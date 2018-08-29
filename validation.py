@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
-def test_score(model, data, only_last=False):
+def test_score(model, data, only_last=False, return_y=False):
     y_pred = np.zeros((0))
     y = np.zeros((0))
     if only_last:
@@ -23,8 +23,12 @@ def test_score(model, data, only_last=False):
         rmse = np.sqrt(mean_squared_error(y, y_pred))
         mae = mean_absolute_error(y, y_pred)
     except:
-        rmse = -1
-        mae = -1
+        rmse = -1.
+        mae = -1.
+
+    if return_y:
+        return rmse, mae, y, y_pred
+
     return rmse, mae
 
 

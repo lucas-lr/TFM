@@ -1,8 +1,8 @@
 import numpy as np
 from TFM.settings import get_target_name, get_user_id_name
 
-def build_datasets(df, con_feats, lstm_feats, cat_feats, train_p, p2p,
-                   user_id=None, target=None, verbose=True):
+def build_datasets(df, feat_dict, train_p, p2p, user_id=None, target=None,
+    verbose=True):
     '''
     Returns validation and test sets for performing the out-of-sample and
     out-of-time validation methods.
@@ -17,6 +17,10 @@ def build_datasets(df, con_feats, lstm_feats, cat_feats, train_p, p2p,
     target = get_target_name(target=target)
     user_id = get_user_id_name(user_id=user_id)
     
+    con_feats = feat_dict['con_feats']
+    lstm_feats = feat_dict['lstm_feats']
+    cat_feats = feat_dict['cat_feats']
+
     data_valid = []
     data_test = []
 
