@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from sklearn.metrics import mean_squared_error, mean_absolute_error
 
 
@@ -42,8 +43,8 @@ def get_shuffle_train(data_test, bs, p2p, noise_factor=None):
             
             if len(train_i) < (bs/2):
                 continue
-                
-            y_train = d['y'][train_i, :-p2p, :]            
+
+            y_train = d['y'][train_i, :-p2p, :]
             if noise_factor is not None:
                 noise = y_train.copy()
                 noise *= (noise_factor*((np.random.randint(0, high=201,
@@ -58,3 +59,28 @@ def get_shuffle_train(data_test, bs, p2p, noise_factor=None):
                 'X_cat': [ar[train_i, :-p2p, :] for ar in d['X_cat']]})
     
     return data
+
+
+def get_last_period_result(y, score, seq_len):
+    '''
+    Returns the result dataframe (y and score) for the last observation of
+    each user. It only works if the length of all sequences is the same.
+    '''
+
+    def np_flatten(obj):
+        if isinstance(obj, list):
+            return np.concatenate(obj)
+        else:
+            return obj
+    y = np_flatten(y)
+    score = np_flatten(score)
+
+    assert len(y) == len(score)
+    result = pd.DataFrame({
+        'y': y, 'score': score
+    })
+    idx = []
+    for i in range(len(result)):
+        if (i + 1)%seq_len == 0:
+            idx.append(i)
+    return result.loc[idx]
