@@ -85,7 +85,7 @@ def get_last_period_result(y, score, seq_len):
             idx.append(i)
     return result.loc[idx]
 
-def run_test(i_batch_test, ps, num_model):
+def run_test(i_batch_test, ps, num_model, path):
     '''
     i_batch_test is the list of the ids that compose the test
     num_model to store the model
@@ -103,7 +103,7 @@ def run_test(i_batch_test, ps, num_model):
         print('Iteration number: ', i)
         i_batch = i_batch_test[i:min(len(i_batch_test), i + positive_size)]
 
-        df_test = get_df(i_batch, verbose = False, test = True)
+        df_test = get_df(i_batch, verbose=False, test=True)
 
         print('Transform features has started... ')
         temp, feat_dict = transform_features(df_test, con_cols, lstm_list, cat_cols, verbose=False)
@@ -130,7 +130,7 @@ def run_test(i_batch_test, ps, num_model):
 
         res_test.append(y_test)
         result_scores.append(scores_test)
-        print('Batch computation time: ',dt.datetime.now() - start)
+        print('Batch computation time: ', dt.datetime.now() - start)
 
-    joblib.dump(res_test, 'MODEL'+num_model+'_ALL/ALL_res_test_model'+num_model+'.pickle', compress = 3)
-    joblib.dump(result_scores, 'MODEL'+num_model+'_ALL/ALL_scores_test'+num_model+'.pickle', compress = 3)
+    joblib.dump(res_test, path+'ALL_res_test_model'+num_model+'.pickle', compress = 3)
+    joblib.dump(result_scores, path+'ALL_scores_test'+num_model+'.pickle', compress = 3)

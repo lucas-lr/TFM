@@ -15,10 +15,10 @@ def add_prior_target(df, p2p, target=None, user_id=None):
      > p2p: periods to predict. Examples: predict the sum of the expense of
        each user in the next [4] weeks.
     '''
-    
+
     target = get_target_name(target=target)
     user_id = get_user_id_name(user_id=user_id)
-    
+
     df['prior_target'] = df.groupby(user_id)[target] \
         .transform(pd.Series.shift, p2p).fillna(0.)
 
@@ -32,11 +32,11 @@ def fillna_cols(df0, user_id=None, fillna_val={}, ffill_cols=[], bfill_cols=[],
      > ffill_cols: fills null values using the forward method per user.
      > bfill_cols: fills null values using the backward method per user.
     '''
-    
+
     user_id = get_user_id_name(user_id=user_id)
-    
+
     df = df0.copy()
-    
+
     for col, val in fillna_val.items():
         if col in df.columns:
             df[col].fillna(value=val, inplace=True)

@@ -11,7 +11,7 @@ def is_binary(s):
 
 
 def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
-    strategy='median', drop_cols=True, verbose=True):
+                       strategy='median', drop_cols=True, verbose=True):
     '''
     Returns:
      > dataframe with transformed features
@@ -30,7 +30,7 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
      > strategy: used in the Inputer() transformer.
      > drop_cols: if True, the original columns are excluded.
     '''
-    
+
     df = df0.copy()
 
     # User profile continuous features
@@ -74,7 +74,8 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
             if clip:
                 s = df[['con__' + f]].clip(lstm_cols[f][0],
                                            lstm_cols[f][1])
-            else: s = df[['con__' + f]]
+            else:
+                s = df[['con__' + f]]
             t2 = MinMaxScaler()
             t2.fit(s)
             df['con__' + f] = t2.transform(df[['con__' + f]])
@@ -102,7 +103,7 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
     if drop_cols:
         df.drop(columns=con_cols + lstm_col_list + list(cat_cols.keys()),
                 inplace=True)
-    
+
     feat_dict = {
         'con_feats': con_features,
         'lstm_feats': lstm_features,
@@ -111,3 +112,22 @@ def transform_features(df0, con_cols=[], lstm_cols=[], cat_cols={},
     }
 
     return df, feat_dict
+
+
+def expand(df):
+    'Returns: a dataframe with all the missing dates fully with missing data'
+
+    df.reset_index(inplace=True)
+    time_index = pd.DataFrame(sorted(df[_RIGHT_TS_NAME].unique()), columns=[_RIGHT_TS_NAME])
+    df_expanded = []
+    for i in df[_USER_ID_NAME].unique():
+        ti = time_index.copy()
+        ti[_USER_ID_NAME] = i
+        df_expanded.append(ti)
+    df_expanded = pd.concat(df_expanded, axis=0)
+
+    # Merge index with event data
+    df_expanded = df_expanded.merge(df, on=[_USER_ID_NAME, _RIGHT_TS_NAME], how='left', copy=False)
+
+    del df
+    return df_expanded
