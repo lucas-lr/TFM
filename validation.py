@@ -84,3 +84,53 @@ def get_last_period_result(y, score, seq_len):
         if (i + 1)%seq_len == 0:
             idx.append(i)
     return result.loc[idx]
+
+def run_test(i_batch_test, ps, num_model):
+    '''
+    i_batch_test is the list of the ids that compose the test
+    num_model to store the model
+    ps positive size, steps
+    Returns test y and scores, getting the dataframe in batches.
+    '''
+
+    res_test =  []
+    result_scores = []
+
+    print(len(i_batch_test))
+    positive_size = ps
+    for i in range(0, len(i_batch_test), positive_size):
+        start = dt.datetime.now()
+        print('Iteration number: ', i)
+        i_batch = i_batch_test[i:min(len(i_batch_test), i + positive_size)]
+
+        df_test = get_df(i_batch, verbose = False, test = True)
+
+        print('Transform features has started... ')
+        temp, feat_dict = transform_features(df_test, con_cols, lstm_list, cat_cols, verbose=False)
+        lstm_feats = feat_dict['lstm_feats']
+        con_feats = feat_dict['con_feats']
+        cat_feats = feat_dict['cat_feats']
+        M = feat_dict['M']
+        print('Transform features has finished... ')
+
+        del df_test
+        #temp = R[R['id'].isin(i_batch)]
+        #break
+        test_x_n = temp[lstm_feats].values.reshape(len(i_batch), 48, len(lstm_feats))
+        test_y = temp['target'].values.reshape(len(i_batch), 48, 1)
+        test_w = (temp['weight']).values.reshape(len(i_batch), 48)
+        test_x_cc = [temp[[i]].values.reshape(len(i_batch), 48, 1) for i in cat_feats]
+        test_x_con= temp[con_feats].values.reshape(len(i_batch), 48, len(con_feats))
+
+        scores_test = model.predict(test_x_cc + [test_x_con, test_x_n]).ravel()
+
+        y_test = test_y.ravel()
+        w_test = test_w.ravel()
+        y_test = y_test[w_test > 0]
+
+        res_test.append(y_test)
+        result_scores.append(scores_test)
+        print('Batch computation time: ',dt.datetime.now() - start)
+
+    joblib.dump(res_test, 'MODEL'+num_model+'_ALL/ALL_res_test_model'+num_model+'.pickle', compress = 3)
+    joblib.dump(result_scores, 'MODEL'+num_model+'_ALL/ALL_scores_test'+num_model+'.pickle', compress = 3)
