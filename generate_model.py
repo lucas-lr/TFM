@@ -1,6 +1,6 @@
 from keras.layers import Concatenate, Conv1D, Dense, Dropout, Embedding, Input, LeakyReLU, LSTM, Reshape
 from keras.models import Model
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras.regularizers import L1L2
 
 
@@ -60,31 +60,30 @@ def generate_model(feat_dict):
     return model
 
 
-def generate_model2(con_feats, lstm_feats, M):
+def generate_model2(con_cols, lstm_list, M, cells):
 
     # Initialize input
-    INPUT = [[], [], []]
+    k = 0
+    inputs = [[], [], []]
+    for m in M:
+        inputs[0].append(Input(shape=(None, 1)))
+        inputs[1].append(Embedding(m[0], min(m[0], m[1]))(inputs[0][-1]))
+        inputs[2].append(Reshape((-1, min(m[0], m[1])))(inputs[1][-1]))
+        k += min(m[0], m[1])
 
-    # A) USER PROFILE FEATURE LAYERS
-    # categorical features
-    for i, m in enumerate(M):
-        INPUT[0].append(Input(shape=(None, 1), name='cat_' + str(i) + '_input'))
-        INPUT[1].append(Embedding(m[0], min(m), name='cat_' + str(i) + '_embedding')(INPUT[0][-1]))
-        INPUT[2].append(Reshape((-1, min(m)), name='cat_' + str(i) + '_reshape')(INPUT[1][-1]))
-    # continuous features
-    cont_input = Input(shape=(None, len(con_feats)), name='cont_input')
-    INPUT[2].append(cont_input)
+    cont_input = Input(shape=(None, len(con_cols)), name='cont_input')
+    inputs[2].append(cont_input)
     # input concatenation
-    concat1 = Concatenate(name='profile_concat')(INPUT[2])
+    concat1 = Concatenate(name='profile_concat')(inputs[2])
 
-    # B) LSTM LAYERS
+    # LSTM layers
     lstm_input = Input(shape=(None, len(lstm_list)))
     k += len(lstm_list)
-    lstm = LSTM(24, return_sequences=True, input_shape=(None, k), stateful=False, dropout=0.1,
+    lstm = LSTM(cells, return_sequences=True, input_shape=(None, k), stateful=False, dropout=0.1,
                 recurrent_regularizer=L1L2(l1=0.0))(lstm_input)
     lstm1 = Concatenate(axis=-1)(inputs[2] + [lstm])
-
-    # C) DENSE LAYERS
+    print(k)
+    # Dense layers
     dns1 = Dense(128, activation='relu')(lstm1)
     con3 = Dropout(0.1)(dns1)
     dns2 = Dense(64, activation='relu')(con3)
@@ -101,5 +100,4 @@ def generate_model2(con_feats, lstm_feats, M):
                   optimizer=op,
                   sample_weight_mode='temporal',
                   metrics=['binary_crossentropy'])
-
     return model

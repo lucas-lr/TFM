@@ -1,11 +1,13 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from dateutil import relativedelta
 
-from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name
+
+from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name, get_code_name
 
 
 def get_decimal_month(dt_series):
-    aux = dt_series.dt.day/dt_series.dt.daysinmonth
+    aux = dt_series.dt.day / dt_series.dt.daysinmonth
     return dt_series.dt.month + aux - 1
 
 
@@ -21,6 +23,25 @@ def add_prior_target(df, p2p, target=None, user_id=None):
 
     df['prior_target'] = df.groupby(user_id)[target] \
         .transform(pd.Series.shift, p2p).fillna(0.)
+
+
+def adding_target(e, periods, p2p, test=False, user_id=None, right_ts=None):
+
+    user_id = get_user_id_name(user_id=user_id)
+    right_ts = get_right_ts_name(right_ts=right_ts)
+
+    m = periods['end_type'] == 'cancer'
+
+    m2 = (periods['dat_can'] >= periods['temp_can'])
+    target = periods.loc[m].copy()
+    if test:
+        target = target.loc[m2].copy()
+    target['c_year'] = target['dat_can'].apply(lambda x: x - relativedelta.relativedelta(months=p2p - 1))
+    cancers_year = target.set_index(user_id)['c_year'].to_dict()
+    e['c_year'] = e[user_id].map(cancers_year).copy()
+    e['target'] = (e[right_ts] >= e['c_year']).astype(float)
+    e.drop(['c_year'], axis=1, inplace=True)
+    del target
 
 
 def fillna_cols(df0, user_id=None, fillna_val={}, ffill_cols=[], bfill_cols=[],
@@ -80,19 +101,19 @@ def clip_continuous_f(se0, q2cl=0, q2cu=1, neg_val=True, return_se1=False,
     se1.clip(lower=l, upper=u, inplace=True)
 
     # histogram
-    if show_hist:       
+    if show_hist:
         fig, ax = plt.subplots(1, 1)
         ax0 = se1.hist(ax=ax, bins=bins)
         ax0.set_title('User-periods with feature != 0')
         ax0.set_xlabel('(Clipped) feature')
-        ax0.set_ylabel('User-periods');
-    
+        ax0.set_ylabel('User-periods')
+
     if return_lu:
         return (l, u)
-    
+
     if return_se1:
         return se0_clip, se1
-    
+
     del se1
     return se0_clip
 
@@ -102,7 +123,7 @@ def trend_enrichment(df0, col, right_ts=None, q2cl=0, q2cu=1, neg_val=True,
     '''
     Enriches dataset with global trend data for the chosen
     continuous feature.
-    
+
     Parameters:
      > q2cl: quantile value used to lower clip the feature.
      > q2cu: quantile value used to upper clip the feature.
@@ -110,7 +131,7 @@ def trend_enrichment(df0, col, right_ts=None, q2cl=0, q2cu=1, neg_val=True,
      > neg_val: If True, negative values are coherent for col.
      > drop_clip: If True, the clipped col is excluded from the resulting
        dataset.
-    
+
     The added columns are:
      > col_clip: clipped col (optional).
      > col_mean: global mean of col per period.
@@ -134,7 +155,7 @@ def trend_enrichment(df0, col, right_ts=None, q2cl=0, q2cu=1, neg_val=True,
         active_users, global_col
     ], axis=1).sort_index()
     trend.columns = ['users', col]
-    trend[col + '_mean'] = trend[col]/trend['users']
+    trend[col + '_mean'] = trend[col] / trend['users']
     trend[col + '_mean_diff'] = trend[col + '_mean'].diff().fillna(0)
 
     for c in [col + '_mean', col + '_mean_diff']:
@@ -150,7 +171,7 @@ def trend_enrichment(df0, col, right_ts=None, q2cl=0, q2cu=1, neg_val=True,
         ax0 = se1.hist(ax=axs[0], bins=bins)
         ax0.set_title('User-periods with {} != 0'.format(col))
         ax0.set_xlabel('(Clipped) {}'.format(col))
-        ax0.set_ylabel('User-periods');
+        ax0.set_ylabel('User-periods')
 
         ax1 = trend[col + '_mean'].plot(ax=axs[1])
         ax1.set_title('Periodic {} per user'.format(col))
