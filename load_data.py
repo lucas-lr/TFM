@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from sklearn.externals import joblib
-from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name
+from TFM.settings import get_right_ts_name, get_target_name, get_user_id_name, get_code_name
 
 
 def load_data(input_path, pref=None, right_ts=None, user_id=None, target=None,
@@ -16,12 +16,12 @@ def load_data(input_path, pref=None, right_ts=None, user_id=None, target=None,
     right_ts = get_right_ts_name(right_ts=right_ts)
     target = get_target_name(target=target)
     user_id = get_user_id_name(user_id=user_id)
-    
+
     if verbose:
         print('Loading data...')
     file_list = sorted(os.listdir(input_path))
     df_list = []
-    
+
     for file in file_list:
         c1 = (file.startswith(pref)) or (pref is None)
         if c1 and file.endswith('.pkl'):
@@ -57,3 +57,21 @@ def load_data(input_path, pref=None, right_ts=None, user_id=None, target=None,
         print('> User-periods: {}'.format(len(df)))
     
     return df
+
+
+def getting_events(events_type, c, user_id=None, code=None):
+
+    user_id = get_user_id_name(user_id=user_id)
+    code = get_code_name(code=code)
+
+    m = events_type[user_id].isin(c)
+    events_chosen = events_type.loc[m]
+
+    cancer_mask = events_chosen[code].str[:3] == 'd_C'
+    melanoma = events_chosen[code].str[:5] == 'd_C44'
+    
+    events_chosen = events_chosen.loc[~cancer_mask|melanoma]
+
+    events_chosen.reset_index(drop=True, inplace=True)
+    del events_type
+    return events_chosen
