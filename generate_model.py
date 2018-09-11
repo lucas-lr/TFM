@@ -5,7 +5,7 @@ from keras.regularizers import L1L2
 
 
 def generate_model(feat_dict):
-    
+
     con_feats = feat_dict['con_feats']
     lstm_feats = feat_dict['lstm_feats']
     M = feat_dict['M']
@@ -55,6 +55,6 @@ def generate_model(feat_dict):
     model.compile(rms_prop,
                   loss='mean_squared_error',
                   metrics=['mean_squared_error', 'mean_absolute_error'],
-                  sample_weight_mode='temporal')
+                  sample_weight_mode='temporal') # timestep-wise sample weighting
 
     return model
