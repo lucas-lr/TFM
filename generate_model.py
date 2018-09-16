@@ -81,10 +81,12 @@ def generate_model2(con_cols, lstm_list, M, cells):
     k += len(lstm_list)
     lstm = LSTM(cells, return_sequences=True, input_shape=(None, k), stateful=False, dropout=0.1,
                 recurrent_regularizer=L1L2(l1=0.0))(lstm_input)
-    lstm1 = Concatenate(axis=-1)(inputs[2] + [lstm])
+    lstm1 = LSTM(12, return_sequences=True, input_shape=(None, k), stateful=False, dropout=0.1,
+                recurrent_regularizer=L1L2(l1=0.0))(lstm)
+    lstm2 = Concatenate(axis=-1)(inputs[2] + [lstm1])
     print(k)
     # Dense layers
-    dns1 = Dense(128, activation='relu')(lstm1)
+    dns1 = Dense(128, activation='relu')(lstm2)
     con3 = Dropout(0.1)(dns1)
     dns2 = Dense(64, activation='relu')(con3)
     dp1 = Dropout(0.2)(dns2)
@@ -94,10 +96,8 @@ def generate_model2(con_cols, lstm_list, M, cells):
     model = Model(inputs[0] + [cont_input, lstm_input], dns3)
     print(model.summary(90))
 
-    op = Adam(lr=0.0001)
-
     model.compile(loss='binary_crossentropy',
-                  optimizer=op,
+                  optimizer='adam',
                   sample_weight_mode='temporal',
                   metrics=['binary_crossentropy'])
     return model

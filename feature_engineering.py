@@ -24,11 +24,12 @@ def add_prior_target(df, p2p, target=None, user_id=None):
     df['prior_target'] = df.groupby(user_id)[target] \
         .transform(pd.Series.shift, p2p).fillna(0.)
 
-
+    
 def adding_target(e, periods, p2p, test=False, user_id=None, right_ts=None):
 
     user_id = get_user_id_name(user_id=user_id)
     right_ts = get_right_ts_name(right_ts=right_ts)
+
 
     m = periods['end_type'] == 'cancer'
 
@@ -36,7 +37,10 @@ def adding_target(e, periods, p2p, test=False, user_id=None, right_ts=None):
     target = periods.loc[m].copy()
     if test:
         target = target.loc[m2].copy()
-    target['c_year'] = target['dat_can'].apply(lambda x: x - relativedelta.relativedelta(months=p2p - 1))
+        target['c_year'] = target['test_dat_max'].apply(lambda x: x - relativedelta.relativedelta(months=p2p - 1))
+    else:
+        target['c_year'] = target['train_dat_max'].apply(lambda x: x - relativedelta.relativedelta(months=p2p - 1))
+    
     cancers_year = target.set_index(user_id)['c_year'].to_dict()
     e['c_year'] = e[user_id].map(cancers_year).copy()
     e['target'] = (e[right_ts] >= e['c_year']).astype(float)
